@@ -1,0 +1,8 @@
+name: Lightning-in-a-Bottle
+version: '${project.version}'
+main: code.blurone.lightninginabottle.LightningBottle
+api-version: '1.20'
+load: STARTUP
+authors: [BlurOne!, Gamemode 4]
+description: A plugin port of GM4's Lightning in a Bottle
+website: https://github.com/BlurOne-GIT/Lightning-in-a-Bottle
