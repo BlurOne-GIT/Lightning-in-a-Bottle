@@ -8,6 +8,20 @@ class LightningBottle : JavaPlugin() {
             if (it.getBoolean("enabled", true))
                 server.pluginManager.registerEvents(LightningBrewer(it, this), this)
         }
+        config.getConfigurationSection("lightning-transformations")?.let {
+            if (it.getBoolean("enabled", false)) return
 
+            it.getConfigurationSection("entities")?.let { config ->
+                val map = config.getValues(false)
+                if (map.isNotEmpty())
+                    server.pluginManager.registerEvents(LightningEntityTransformation(map), this)
+            }
+
+            it.getConfigurationSection("blocks")?.let { config ->
+                val map = config.getValues(false)
+                if (map.isNotEmpty())
+                    server.pluginManager.registerEvents(LightningBlockTransformation(map), this)
+            }
+        }
     }
 }

@@ -11,3 +11,18 @@ lightning-in-a-bottle:
   # 'CONSTANT' casts a single lightning bolt that last the entire duration of the effect cloud
   # 'GM4' casts lightning bolts at random for the duration of the effect cloud
   lingering-lightning-mode: 'VANILLA'
+
+# Blocks or entities tranforming into other entities when hit by lightning
+# Entities from https://hub.spigotmc.org/javadocs/spigot/org/bukkit/entity/EntityType.html
+# Blocks from https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
+lightning-transformations:
+  enabled: true
+  # From entity to entity
+  entities:
+    PILLAGER: EVOKER
+    EVOKER: ILLUSION
+  # From block to entity
+  blocks:
+    PURPUR_BLOCK: SHULKER
+    PRISMARINE_BRICKS: GUARDIAN
+    SLIME_BLOCK: SLIME
