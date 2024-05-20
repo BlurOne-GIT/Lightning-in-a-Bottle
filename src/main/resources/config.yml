@@ -1,0 +1,13 @@
+# Lightning in a Bottle Feature
+lightning-in-a-bottle:
+  enabled: true
+  # Whether the potion should have the enchantment glint
+  has-enchantment-glint: false
+  # Change the custom model data of the potion item to the number of your resource pack's custom model data predicate
+  # Leave null to disable
+  custom-model-data: null
+  # The behaviour of the lingering bottle of lightning
+  # 'VANILLA' casts a lightning bolt to entities that enter the effect cloud
+  # 'CONSTANT' casts a single lightning bolt that last the entire duration of the effect cloud
+  # 'GM4' casts lightning bolts at random for the duration of the effect cloud
+  lingering-lightning-mode: 'VANILLA'

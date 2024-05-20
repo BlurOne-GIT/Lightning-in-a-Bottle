@@ -4,10 +4,10 @@ import org.bukkit.plugin.java.JavaPlugin
 
 class LightningBottle : JavaPlugin() {
     override fun onEnable() {
-        // Plugin startup logic
-    }
+        config.getConfigurationSection("lightning-in-a-bottle")?.let {
+            if (it.getBoolean("enabled", true))
+                server.pluginManager.registerEvents(LightningBrewer(it, this), this)
+        }
 
-    override fun onDisable() {
-        // Plugin shutdown logic
     }
 }
