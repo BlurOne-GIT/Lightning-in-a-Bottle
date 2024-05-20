@@ -6,6 +6,7 @@ import org.bukkit.block.BrewingStand
 import org.bukkit.block.data.Directional
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.enchantments.Enchantment
+import org.bukkit.entity.AreaEffectCloud
 import org.bukkit.entity.LightningStrike
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -24,9 +25,11 @@ import org.bukkit.plugin.Plugin
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
+import org.bukkit.scheduler.BukkitRunnable
 import java.util.UUID
+import kotlin.random.Random
 
-class LightningBrewer(config: ConfigurationSection, plugin: Plugin) : Listener {
+class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) : Listener {
     companion object {
         fun isLightningBottle(item: ItemStack?): Boolean {
             return item?.itemMeta?.persistentDataContainer?.has(potionNamespacedKey) ?: false
@@ -118,7 +121,7 @@ class LightningBrewer(config: ConfigurationSection, plugin: Plugin) : Listener {
 
         if (lingeringLightningMode == LingeringLightningMode.GM4) {
             event.entity.world.strikeLightning(event.entity.location)
-            // TODO: copy GM4 mode
+            LingeringRunnable(event.areaEffectCloud).runTaskTimer(plugin, 80L, 80L)
         }
         else if (lingeringLightningMode == LingeringLightningMode.CONSTANT) {
             val lightning = event.areaEffectCloud.world.strikeLightning(event.areaEffectCloud.location)
@@ -159,6 +162,16 @@ class LightningBrewer(config: ConfigurationSection, plugin: Plugin) : Listener {
                 for (entity in event.affectedEntities)
                     entity.world.strikeLightning(entity.location)
             }
+        }
+    }
+
+    class LingeringRunnable(private val areaEffectCloud: AreaEffectCloud) : BukkitRunnable() {
+        override fun run() {
+            if (!areaEffectCloud.isValid)
+                return this.cancel()
+
+            if (Random.nextBoolean())
+                areaEffectCloud.world.strikeLightning(areaEffectCloud.location)
         }
     }
 }
