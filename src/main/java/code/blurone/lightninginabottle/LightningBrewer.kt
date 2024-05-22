@@ -1,5 +1,8 @@
 package code.blurone.lightninginabottle
 
+import code.blurone.lightninginabottle.OcdTranslator.Companion.DEFAULT_LINGERING_NAME
+import code.blurone.lightninginabottle.OcdTranslator.Companion.DEFAULT_POTION_NAME
+import code.blurone.lightninginabottle.OcdTranslator.Companion.DEFAULT_SPLASH_NAME
 import org.bukkit.*
 import org.bukkit.block.BlockFace
 import org.bukkit.block.BrewingStand
@@ -7,8 +10,6 @@ import org.bukkit.block.data.Directional
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.AreaEffectCloud
-import org.bukkit.entity.LightningStrike
-import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.AreaEffectCloudApplyEvent
@@ -26,7 +27,8 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.potion.PotionType
 import org.bukkit.scheduler.BukkitRunnable
-import java.util.UUID
+import java.lang.reflect.Field
+import java.lang.reflect.Method
 import kotlin.random.Random
 
 class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) : Listener {
@@ -39,14 +41,48 @@ class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) 
             return makePotion(ItemStack(type))
         }
 
+        private var loreField: Field? = null
+        private var safelyAddMethod: Method? = null
+
+        private fun setLore(potionMeta: PotionMeta, lore: MutableList<String>) {
+            if (loreField == null)
+                loreField = potionMeta.javaClass.superclass.getDeclaredField("lore").apply { isAccessible = true }
+
+            loreField!!.set(potionMeta, lore)
+        }
+
+        private fun safelyAdd(potionMeta: PotionMeta, value: List<String>, lore: MutableList<String>) {
+            if (safelyAddMethod == null)
+                safelyAddMethod = potionMeta.javaClass.superclass.getDeclaredMethod("safelyAdd",
+                    java.lang.Iterable::class.java,
+                    java.util.Collection::class.java,
+                    true.javaClass
+                ).apply { isAccessible = true }
+
+            safelyAddMethod!!.invoke(potionMeta, value, lore, true)
+        }
+
         fun makePotion(itemStack: ItemStack): ItemStack {
             val potionMeta = itemStack.itemMeta as PotionMeta
             potionMeta.persistentDataContainer.set(potionNamespacedKey, PersistentDataType.STRING, itemStack.type.name)
             potionMeta.basePotionType = PotionType.UNCRAFTABLE
             if (itemStack.type == Material.POTION)
                 potionMeta.addCustomEffect(PotionEffect(PotionEffectType.SPEED, 40, 3, false, true, true), true)
-            // TODO: set default display name
-            // TODO: set default lore
+            potionMeta.setDisplayName("§r${when (itemStack.type) {
+                Material.POTION -> DEFAULT_POTION_NAME
+                Material.SPLASH_POTION -> DEFAULT_SPLASH_NAME
+                Material.LINGERING_POTION -> DEFAULT_LINGERING_NAME
+                else -> throw IllegalStateException("Unhandled potion form: ${itemStack.type}")
+            }}")
+            // INJECTION MODE ACTIVATED
+            val loreList = mutableListOf<String>()
+            val loreValue = listOf("""
+            {
+                "translate": "entity.minecraft.lightning_bolt",
+                "color": "red"
+            }""".trimIndent())
+            safelyAdd(potionMeta, loreValue, loreList)
+            setLore(potionMeta, loreList)
             potionMeta.color = potionColor
             if (shallGlint)
                 potionMeta.addEnchant(Enchantment.CHANNELING, 1, false)
