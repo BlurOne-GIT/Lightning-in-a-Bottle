@@ -116,6 +116,7 @@ class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) 
 
     @EventHandler
     private fun onLightningStrike(event: LightningStrikeEvent) {
+        if (event.cause == LightningStrikeEvent.Cause.CUSTOM) return // Don't duplicate potions
         val lightningRod = event.lightning.location.block.getRelative(BlockFace.DOWN)
         if (lightningRod.type != Material.LIGHTNING_ROD) return
         val brewingStand = lightningRod.getRelative((lightningRod.blockData as Directional).facing.oppositeFace)
