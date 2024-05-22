@@ -122,10 +122,11 @@ class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) 
         val brewingStand = lightningRod.getRelative((lightningRod.blockData as Directional).facing.oppositeFace)
         if (brewingStand.type != Material.BREWING_STAND) return
         val state = brewingStand.state as BrewingStand
-        if (state.fuelLevel == 0) return
+        if (state.fuelLevel <= 0) return
         var actuallyDidSomething = false
-        for (item in state.inventory) {
-            val potionMeta = item.itemMeta as? PotionMeta ?: continue
+        val inv = state.inventory.contents.clone()
+        for (item in inv) {
+            val potionMeta = item?.itemMeta as? PotionMeta ?: continue
             if (potionMeta.basePotionType != PotionType.THICK) continue
             actuallyDidSomething = true
             makePotion(item)
@@ -133,6 +134,8 @@ class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) 
         if (!actuallyDidSomething) return
         --state.fuelLevel
         state.brewingTime = 0
+        state.update()
+        state.inventory.contents = inv
     }
 
     @EventHandler
