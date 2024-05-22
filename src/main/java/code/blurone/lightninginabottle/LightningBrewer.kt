@@ -95,7 +95,6 @@ class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) 
         private lateinit var potionNamespacedKey: NamespacedKey
         private var customModelData: Int? = null
         private val potionColor = Color.fromRGB(1985402)
-        private lateinit var lingeringLightningMode: LingeringLightningMode
         private var shallGlint = false
     }
 
@@ -105,13 +104,20 @@ class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) 
         CONSTANT
     }
 
+    private val lingeringLightningMode: LingeringLightningMode
+
     init {
         potionNamespacedKey = NamespacedKey(plugin, "lightning-potion")
         shallGlint = config.getBoolean("has-enchantment-glint", false)
         customModelData = config.get("custom-model-data") as? Int?
         lingeringLightningMode = LingeringLightningMode.valueOf(config.getString("lingering-lightning-mode", "GM4")!!.uppercase())
-        if (lingeringLightningMode != LingeringLightningMode.GM4)
-            Bukkit.getPluginManager().registerEvents(LingeringListener(), plugin)
+        Bukkit.getPluginManager().registerEvents(
+            if (lingeringLightningMode == LingeringLightningMode.VANILLA)
+                VanillaLingeringListener()
+            else
+                OtherLingeringListener(),
+            plugin
+        )
     }
 
     @EventHandler
@@ -159,16 +165,14 @@ class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) 
         event.areaEffectCloud.particle = Particle.ELECTRIC_SPARK
         event.areaEffectCloud.color = potionColor
 
-        if (lingeringLightningMode == LingeringLightningMode.GM4) {
-            event.entity.world.strikeLightning(event.entity.location)
-            LingeringRunnable(event.areaEffectCloud).runTaskTimer(plugin, 80L, 80L)
-        }
-        else if (lingeringLightningMode == LingeringLightningMode.CONSTANT) {
-            val lightning = event.areaEffectCloud.world.strikeLightning(event.areaEffectCloud.location)
-            lightning.lifeTicks = event.areaEffectCloud.duration
-            lightning.causingPlayer = event.entity.shooter as? Player
-            event.areaEffectCloud.persistentDataContainer.set(potionNamespacedKey, PersistentDataType.STRING, lightning.uniqueId.toString())
-        }
+        if (lingeringLightningMode == LingeringLightningMode.VANILLA) return
+
+        event.areaEffectCloud.durationOnUse = 0
+
+        if (lingeringLightningMode == LingeringLightningMode.CONSTANT)
+            ConstantRunnable(event.areaEffectCloud).runTaskTimer(plugin, 0L, 1L)
+        else // GM4
+            GM4Runnable(event.areaEffectCloud).runTaskTimer(plugin, 80L, 80L)
     }
 
     @EventHandler
@@ -190,28 +194,53 @@ class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) 
                 event.results[slot] = createPotion(postMaterial)
     }
 
-    class LingeringListener : Listener {
+    class VanillaLingeringListener : Listener {
         @EventHandler
         private fun onAreaEffectCloud(event: AreaEffectCloudApplyEvent) {
-            if (!event.entity.persistentDataContainer.has(potionNamespacedKey)) return
-            if (lingeringLightningMode == LingeringLightningMode.CONSTANT) {
-                val uuid = UUID.fromString(event.entity.persistentDataContainer.get(potionNamespacedKey, PersistentDataType.STRING))
-                val lightning = event.entity.world.getEntitiesByClass(LightningStrike::class.java).firstOrNull { it.uniqueId == uuid }
-                lightning?.lifeTicks = event.entity.duration
-            } else { // VANILLA
+            if (event.entity.persistentDataContainer.has(potionNamespacedKey))
                 for (entity in event.affectedEntities)
                     entity.world.strikeLightning(entity.location)
-            }
         }
     }
 
-    class LingeringRunnable(private val areaEffectCloud: AreaEffectCloud) : BukkitRunnable() {
+    class OtherLingeringListener : Listener {
+        @EventHandler
+        private fun onAreaEffectCloud(event: AreaEffectCloudApplyEvent) {
+            if (!event.entity.persistentDataContainer.has(potionNamespacedKey)) return
+
+            event.entity.duration += event.entity.durationOnUse
+            event.entity.radius += event.entity.radiusOnUse
+        }
+    }
+
+    class GM4Runnable(private val areaEffectCloud: AreaEffectCloud) : BukkitRunnable() {
+        init {
+            areaEffectCloud.world.strikeLightning(areaEffectCloud.location)
+        }
+
         override fun run() {
             if (!areaEffectCloud.isValid)
-                return this.cancel()
+                return cancel()
 
             if (Random.nextBoolean())
                 areaEffectCloud.world.strikeLightning(areaEffectCloud.location)
+        }
+    }
+
+    class ConstantRunnable(private val areaEffectCloud: AreaEffectCloud) : BukkitRunnable() {
+        private var lightning = areaEffectCloud.world.strikeLightning(areaEffectCloud.location)
+
+        init {
+            areaEffectCloud.duration /= 2
+            areaEffectCloud.radius /= 2
+        }
+
+        override fun run() {
+            if (!areaEffectCloud.isValid)
+                return cancel()
+
+            if (!lightning.isValid)
+                lightning = areaEffectCloud.world.strikeLightning(areaEffectCloud.location)
         }
     }
 }
