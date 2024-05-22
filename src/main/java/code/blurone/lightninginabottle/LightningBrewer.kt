@@ -107,7 +107,7 @@ class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) 
 
     init {
         potionNamespacedKey = NamespacedKey(plugin, "lightning-potion")
-        shallGlint = config.getBoolean("")
+        shallGlint = config.getBoolean("has-enchantment-glint", false)
         customModelData = config.get("custom-model-data") as? Int?
         lingeringLightningMode = LingeringLightningMode.valueOf(config.getString("lingering-lightning-mode", "GM4")!!.uppercase())
         if (lingeringLightningMode != LingeringLightningMode.GM4)
