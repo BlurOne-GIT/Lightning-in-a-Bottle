@@ -26,3 +26,20 @@ lightning-transformations:
     PURPUR_BLOCK: SHULKER
     PRISMARINE_BRICKS: GUARDIAN
     SLIME_BLOCK: SLIME
+
+# Item translations
+translations:
+  # If your server doesn't have players using different languages, and you wish to disable this feature, you can do so.
+  enabled: true
+  # For translations, you can use a full locale (e.g. en_US) or just the language (e.g. en).
+  # Translations for the normal Bottle of Lightning
+  potion-translations:
+    en: "Bottle of Lightning"
+    es: "Relámpago embotellado"
+  # Translations for the Splash Bottle of Lightning
+  splash-translations:
+    en: "Splash Bottle of Lightning"
+    es: "Relámpago embotellado arrojadizo"
+  lingering-translations:
+    en: "Lingering Bottle of Lightning"
+    es: "Relámpago embotellado persistente"
