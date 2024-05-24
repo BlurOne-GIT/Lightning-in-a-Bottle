@@ -232,7 +232,6 @@ class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) 
 
         init {
             areaEffectCloud.duration /= 2
-            areaEffectCloud.radius /= 2
         }
 
         override fun run() {
