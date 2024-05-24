@@ -111,13 +111,8 @@ class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) 
         shallGlint = config.getBoolean("has-enchantment-glint", false)
         customModelData = config.get("custom-model-data") as? Int?
         lingeringLightningMode = LingeringLightningMode.valueOf(config.getString("lingering-lightning-mode", "GM4")!!.uppercase())
-        Bukkit.getPluginManager().registerEvents(
-            if (lingeringLightningMode == LingeringLightningMode.VANILLA)
-                VanillaLingeringListener()
-            else
-                OtherLingeringListener(),
-            plugin
-        )
+        if (lingeringLightningMode == LingeringLightningMode.VANILLA)
+            Bukkit.getPluginManager().registerEvents(VanillaLingeringListener(), plugin)
     }
 
     @EventHandler
@@ -168,6 +163,7 @@ class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) 
         if (lingeringLightningMode == LingeringLightningMode.VANILLA) return
 
         event.areaEffectCloud.durationOnUse = 0
+        event.areaEffectCloud.radiusOnUse = 0f
 
         if (lingeringLightningMode == LingeringLightningMode.CONSTANT)
             ConstantRunnable(event.areaEffectCloud).runTaskTimer(plugin, 0L, 1L)
@@ -200,16 +196,6 @@ class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) 
             if (event.entity.persistentDataContainer.has(potionNamespacedKey))
                 for (entity in event.affectedEntities)
                     entity.world.strikeLightning(entity.location)
-        }
-    }
-
-    class OtherLingeringListener : Listener {
-        @EventHandler
-        private fun onAreaEffectCloud(event: AreaEffectCloudApplyEvent) {
-            if (!event.entity.persistentDataContainer.has(potionNamespacedKey)) return
-
-            event.entity.duration += event.entity.durationOnUse
-            event.entity.radius += event.entity.radiusOnUse
         }
     }
 
