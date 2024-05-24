@@ -94,7 +94,7 @@ class LightningBrewer(config: ConfigurationSection, private val plugin: Plugin) 
 
         private lateinit var potionNamespacedKey: NamespacedKey
         private var customModelData: Int? = null
-        private val potionColor = Color.fromRGB(1985402)
+        private val potionColor = Color.fromRGB(11985402)
         private var shallGlint = false
     }
 
